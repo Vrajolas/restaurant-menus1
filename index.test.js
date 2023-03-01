@@ -17,27 +17,46 @@ describe('Restaurant and Menu Models', () => {
     });
 
     test('can create a Restaurant', async () => {
-        // TODO - write test
-        expect('NO TEST').toEqual('EXPECTED DATA')
+        const restaurant = await Restaurant.create(seedRestaurant[0]);
+        expect(restaurant.name).toEqual('AppleBees');
+        expect(restaurant.location).toEqual('Texas');
+        expect(restaurant.cuisine).toEqual('FastFood');
     });
 
     test('can create a Menu', async () => {
-        // TODO - write test
-        expect('NO TEST').toEqual('EXPECTED DATA')
+        const menuData = seedMenu[0];
+        const menu = await Menu.create(menuData);
+      
+        expect(menu.title).toEqual(menuData.title);
     });
 
     test('can find Restaurants', async () => {
-        // TODO - write test
-        expect('NO TEST').toEqual('EXPECTED DATA')
+        await Restaurant.bulkCreate(seedRestaurant);
+        const restaurants = await Restaurant.findAll();
+        expect(restaurants.length).toEqual(3);
+        expect(restaurants[0].name).toEqual('AppleBees');
+        expect(restaurants[1].name).toEqual('LittleSheep');
+        expect(restaurants[2].name).toEqual('Spice Grill');
     });
 
     test('can find Menus', async () => {
-        // TODO - write test
-        expect('NO TEST').toEqual('EXPECTED DATA')
+        const menus = await Menu.findAll();
+
+        expect(menus.length).toEqual(seedMenu.length);
+        expect(menus[0].title).toEqual(seedMenu[0].title);
+        expect(menus[1].title).toEqual(seedMenu[1].title);
+        expect(menus[2].title).toEqual(seedMenu[2].title);
     });
 
     test('can delete Restaurants', async () => {
-        // TODO - write test
-        expect('NO TEST').toEqual('EXPECTED DATA')
+        const restaurantData = seedRestaurant[0];
+        const restaurant = await Restaurant.create(restaurantData);
+      
+        const foundRestaurant = await Restaurant.findByPk(restaurant.id);
+        expect(foundRestaurant.name).toEqual(restaurantData.name);
+      
+        await restaurant.destroy();
+        const deletedRestaurant = await Restaurant.findByPk(restaurant.id);
+        expect(deletedRestaurant).toEqual(null);
     });
 })

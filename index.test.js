@@ -1,5 +1,5 @@
 const {sequelize} = require('./db')
-const {Restaurant, Menu} = require('./models/index')
+const {Restaurant, Menu, Item} = require('./models/index')
 const {
     seedRestaurant,
     seedMenu,
@@ -59,4 +59,112 @@ describe('Restaurant and Menu Models', () => {
         const deletedRestaurant = await Restaurant.findByPk(restaurant.id);
         expect(deletedRestaurant).toEqual(null);
     });
+
+    test('can have multiple menus', async () => {
+        const restaurant = await Restaurant.create({
+          name: 'My Restaurant'
+        })
+    
+        const menu1 = await Menu.create({
+          name: 'Starters',
+          RestaurantId: restaurant.id
+        })
+    
+        const menu2 = await Menu.create({
+          name: 'Main',
+          RestaurantId: restaurant.id
+        })
+    
+        const menus = await restaurant.getMenus()
+        expect(menus).toHaveLength(2)
+        expect(menus[0].name).toBe('Appetizers')
+        expect(menus[1].name).toBe('Entrees')
+    
+        const restaurantFromMenu = await menu1.getRestaurant()
+        expect(restaurantFromMenu.id).toBe(restaurant.id)
+        expect(restaurantFromMenu.name).toBe('My Restaurant')
+    })
+
+    test('can have multiple items', async () => {
+        const menu = await Menu.create({
+          name: 'My Menu'
+        })
+    
+        const item1 = await Item.create({
+          name: 'Burger',
+          image: 'burger.jpg',
+          price: 10,
+          vegetarian: false
+        })
+    
+        const item2 = await Item.create({
+          name: 'Fries',
+          image: 'fries.jpg',
+          price: 5,
+          vegetarian: true
+        })
+    
+        await menu.addItems([item1, item2])
+    
+        const items = await menu.getItems()
+        expect(items).toHaveLength(2)
+        expect(items[0].name).toBe('Burger')
+        expect(items[1].name).toBe('Fries')
+    
+        const menusFromItem1 = await item1.getMenus()
+        expect(menusFromItem1).toHaveLength(1)
+        expect(menusFromItem1[0].name).toBe('My Menu')
+    
+        const menusFromItem2 = await item2.getMenus()
+        expect(menusFromItem2).toHaveLength(1)
+        expect(menusFromItem2[0].name).toBe('My Menu')
+    })
+
+    test('can eager load items', async () => {
+        const menu1 = await Menu.create({
+          name: 'Menu 1'
+        })
+    
+        const item1 = await Item.create({
+          name: 'Burger',
+          image: 'burger.jpg',
+          price: 10,
+          vegetarian: false
+        })
+    
+        const item2 = await Item.create({
+          name: 'Fries',
+          image: 'fries.jpg',
+          price: 5,
+          vegetarian: true
+        })
+    
+        await menu1.addItems([item1, item2])
+    
+        const menu2 = await Menu.create({
+          name: 'Menu 2'
+        })
+    
+        const item3 = await Item.create({
+          name: 'Salad',
+          image: 'salad.jpg',
+          price: 2,
+          vegetarian: true
+        })
+    
+        await menu2.addItems([item3])
+    
+        const menus = await Menu.findAll({
+          include: [Item]
+        })
+    
+        expect(menus).toHaveLength(2)
+        expect(menus[0].name).toBe('Menu 1')
+        expect(menus[0].Items).toHaveLength(2)
+        expect(menus[0].Items[0].name).toBe('Burger')
+        expect(menus[0].Items[1].name).toBe('Fries')
+        expect(menus[1].name).toBe('Menu 2')
+        expect(menus[1].Items).toHaveLength(1)
+        expect(menus[1].Items[0].name).toBe('Salad')
+    })
 })
